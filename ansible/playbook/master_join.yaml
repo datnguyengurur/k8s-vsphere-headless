@@ -17,7 +17,7 @@
        dest: /tmp/master_join.sh
        mode: 0777
 
-   - name: Join the Worker nodes to the cluster.
+   - name: Join the master nodes to the cluster.
      become: yes
      command: sh /tmp/master_join.sh
      #register: joined_or_not
