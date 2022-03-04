@@ -263,18 +263,20 @@ resource "null_resource" "init-master" {
     }
 }
 resource "null_resource" "master-join" {
+    count = 2
     depends_on = [
         vsphere_virtual_machine.k8s-first-master,
         vsphere_virtual_machine.k8s-master,
         vsphere_virtual_machine.k8s-lb,
         null_resource.init-master
         ]
-    for_each = toset(vsphere_virtual_machine.k8s-master.*.default_ip_address)
+    #for_each = toset(vsphere_virtual_machine.k8s-master.*.default_ip_address)
     provisioner "local-exec" {
-        command = "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -u admin --private-key ${path.module}/credentials/ssh_key -e working_host='${each.key}' ansible/playbook/master_join.yaml"
+        command = "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -u admin --private-key ${path.module}/credentials/ssh_key -e working_host='${vsphere_virtual_machine.k8s-master[count.index].default_ip_address}' ansible/playbook/master_join.yaml"
     }
 }
 resource "null_resource" "worker-join" {
+    count = 5
     depends_on = [
         vsphere_virtual_machine.k8s-first-master,
         vsphere_virtual_machine.k8s-master,
@@ -283,9 +285,9 @@ resource "null_resource" "worker-join" {
         null_resource.init-master,
         null_resource.master-join
         ]
-    for_each = toset(vsphere_virtual_machine.k8s-worker.*.default_ip_address)
+    #for_each = toset(vsphere_virtual_machine.k8s-worker.*.default_ip_address)
     provisioner "local-exec" {
-        command = "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -u admin --private-key ${path.module}/credentials/ssh_key -e working_host='${each.key}' ansible/playbook/worker_join.yaml"
+        command = "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -u admin --private-key ${path.module}/credentials/ssh_key -e working_host='${vsphere_virtual_machine.k8s-worker[count.index].default_ip_address}' ansible/playbook/worker_join.yaml"
     }
 }
 ##############################
