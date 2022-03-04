@@ -263,7 +263,7 @@ resource "null_resource" "init-master" {
     }
 }
 resource "null_resource" "master-join" {
-    count = 2
+    count = length(vsphere_virtual_machine.k8s-master.*)
     depends_on = [
         vsphere_virtual_machine.k8s-first-master,
         vsphere_virtual_machine.k8s-master,
@@ -276,7 +276,7 @@ resource "null_resource" "master-join" {
     }
 }
 resource "null_resource" "worker-join" {
-    count = 5
+    count = length(vsphere_virtual_machine.k8s-worker.*)
     depends_on = [
         vsphere_virtual_machine.k8s-first-master,
         vsphere_virtual_machine.k8s-master,
