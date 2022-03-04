@@ -1,0 +1,17 @@
+##################################################################################
+# VARIABLES
+##################################################################################
+
+# Credentials
+
+vsphere_server   = "172.16.95.26"
+vsphere_username = "dat.nguyen@nguyenthdat.com"
+vsphere_password = "********"
+vsphere_insecure = true
+
+# vSphere Settings
+
+vsphere_datacenter          = "NTD-Datacenter"
+vsphere_cluster             = "Hermes"
+vsphere_switch              = "NTD-Central-Network"
+hapass = "foopass"

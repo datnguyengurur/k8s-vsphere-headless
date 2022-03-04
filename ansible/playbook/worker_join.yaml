@@ -1,0 +1,22 @@
+- hosts: localhost
+  connection: local
+  tasks:
+  - add_host:
+      name: "{{ working_host }}"
+      groups: working_group
+    changed_when: false
+- hosts: working_group
+  become: yes
+  gather_facts: yes
+
+  tasks:
+   - name: Copy join command from Ansiblehost to the worker nodes.
+     become: yes
+     copy:
+       src: /tmp/worker_join.sh
+       dest: /tmp/worker_join.sh
+       mode: 0777
+
+   - name: Join the Worker nodes to the cluster.
+     become: yes
+     command: sh /tmp/worker_join.sh

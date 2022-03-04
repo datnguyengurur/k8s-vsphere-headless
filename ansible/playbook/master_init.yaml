@@ -1,0 +1,56 @@
+- hosts: localhost
+  connection: local
+  tasks:
+  - add_host:
+      name: "{{ working_host }}"
+      groups: working_group
+    changed_when: false
+- hosts: working_group
+  become: yes
+  tasks:
+    - name: initialize the cluster
+      shell: kubeadm init --control-plane-endpoint "172.16.0.250:6443" --upload-certs
+      register: k8s_master_join_command
+    
+    - name: Copy output to local file
+      become: yes
+      local_action: copy content="{{ k8s_master_join_command.stdout_lines[72:75] | join('\n') }}" dest="/tmp/master_join.sh" mode=0777
+
+    - name: create .kube directory
+      become: yes
+      become_user: admin
+      file:
+        path: $HOME/.kube
+        state: directory
+        mode: 0755
+
+    - name: copies admin.conf to user's kube config
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: /home/admin/.kube/config
+        remote_src: yes
+        owner: admin
+
+    - name: install Pod network
+      become: yes
+      become_user: admin
+      shell: kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml 
+      args:
+        chdir: $HOME
+    
+    - name: install cloud storage
+      become: yes
+      become_user: admin
+      shell: kubectl apply -f https://raw.githubusercontent.com/longhorn/longhorn/v1.2.3/deploy/longhorn.yaml 
+      args:
+        chdir: $HOME
+        
+    - name: Get the token for joining the worker nodes
+      become: yes
+      become_user: admin
+      shell: kubeadm token create  --print-join-command
+      register: k8s_worker_join_command
+
+    - name: Copy join command to local file.
+      become: yes
+      local_action: copy content="{{ k8s_worker_join_command.stdout_lines[0] }}" dest="/tmp/worker_join.sh" mode=0777
