@@ -7,3 +7,14 @@ https://github.com/vmware-samples/packer-examples-for-vsphere
 ## Re-Create the tfvars file included in the repo
 - Create a folder name credentials and put your ssh private key in.
 - As the script I wrote for debian base, RHEL like kernel may not work, you may need to redact the scripts a bit.
+
+How to use
+terraform init
+
+terraform plan
+
+terraform apply --auto-approve
+
+
+Cleanup
+terraform destroy
