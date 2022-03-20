@@ -2,12 +2,15 @@
 
 users:
   - default
-  - name: admin
-    primary_group: admin
+  - name: ${username}
+    primary_group: ${username}
+    shell: /bin/bash
     sudo: ALL=(ALL) NOPASSWD:ALL
     groups: sudo, wheel
+    package_upgrade: true
     ssh_import_id: None
     lock_passwd: true
     ssh_authorized_keys:
-    - ecdsa-sha2-nistp521 AAAAE2VjZHNhLXNoYTItbmlzdHA1MjEAAAAIbmlzdHA1MjEAAACFBAGRpGCqCmIK2staTCWWJ4Yr1u4BDNKH4+VlxRDQyBOnT4KoWY5JfAmn9VDHP2Ajv3uUfy7oU8X9LPxkfHVIG5HDwwBXs6IErY5HcL6lfXvdmkJM2AZQo5w48IEcWEAZ8e1ba4y6fTFg2nEf3Ro5kbAc0x2y0Ky7LvN9n9ignxV2srS0kg== admin@ntdsecurity.com
-    - ecdsa-sha2-nistp521 AAAAE2VjZHNhLXNoYTItbmlzdHA1MjEAAAAIbmlzdHA1MjEAAACFBAAChkhlnWnLelQFRMDlfqpADkudaR2zPwx8p2OXrB9nyyylG67F8QMNwWuVmM4pFAmT4vHxfgWyn4KDO0v5pyZfzQCCeK6VdZ3FKq42l4ymiD1dEDEIL4++6ahWsnuJTqrWUg7cGjpVJel8XSlmZWA4rwF1z+ADB+Rot1t/OVWapOmQag== admin@k8s-hard-way
+    - ${ssh_public_key}
+
+packages: ${packages}

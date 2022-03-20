@@ -10,6 +10,46 @@ variable "k8s-dev-vip" {
 variable "hapass" {
   type = string
 }
+data template_file "userdata" {
+  template = file("${path.module}/cloud-init/userdata.yaml")
+
+  vars = {
+    username           = "admin"
+    ssh_public_key     = file("${path.module}/credentials/ssh_key.pub")
+    packages           = jsonencode(["haproxy","keepalived"])
+  }
+}
+
+data template_file "metadata" {
+  template = file("${path.module}/cloud-init/metadata.yaml")
+  vars = {
+    dhcp        = "true"
+    hostname    = "ubuntu"
+    #ip_address  = "172.16.0.10"
+    #netmask     = "24"
+    nameservers = jsonencode(["1.1.1.1", "1.0.0.1"])
+    #gateway     = "172.16.0.254"
+  }
+}
+
+variable gateway {
+  type    = string
+  default = ""
+}
+
+variable nameservers {
+  type    = list
+  default = []
+}
+
+output metadata {
+  value = "\n${data.template_file.metadata.rendered}"
+}
+
+output userdata {
+  value = "\n${data.template_file.userdata.rendered}"
+}
+
 ##############################
 ##### Define K8S Cluster #####
 ##############################
@@ -73,12 +113,13 @@ resource "vsphere_virtual_machine" "k8s-lb" {
         ]
     }
     extra_config = {
-        "guestinfo.metadata"          = base64encode(file("${path.module}/cloud-init/metadata.yaml"))
+        "guestinfo.metadata"          = base64encode(data.template_file.metadata.rendered)
         "guestinfo.metadata.encoding" = "base64"
-        "guestinfo.userdata"          = base64encode(file("${path.module}/cloud-init/userdata.yaml"))
+        "guestinfo.userdata"          = base64encode(data.template_file.userdata.rendered)
         "guestinfo.userdata.encoding" = "base64"
     }
 }
+
 resource "vsphere_virtual_machine" "k8s-first-master" {
     folder = vsphere_folder.k8s-dev.path
     name             = "dev-master-1"
@@ -130,9 +171,9 @@ resource "vsphere_virtual_machine" "k8s-first-master" {
         ]
     }
     extra_config = {
-        "guestinfo.metadata"          = base64encode(file("${path.module}/cloud-init/metadata.yaml"))
+        "guestinfo.metadata"          = base64encode(data.template_file.metadata.rendered)
         "guestinfo.metadata.encoding" = "base64"
-        "guestinfo.userdata"          = base64encode(file("${path.module}/cloud-init/userdata.yaml"))
+        "guestinfo.userdata"          = base64encode(data.template_file.userdata.rendered)
         "guestinfo.userdata.encoding" = "base64"
     }
 }
@@ -187,18 +228,18 @@ resource "vsphere_virtual_machine" "k8s-master" {
         ]
     }
     extra_config = {
-        "guestinfo.metadata"          = base64encode(file("${path.module}/cloud-init/metadata.yaml"))
+        "guestinfo.metadata"          = base64encode(data.template_file.metadata.rendered)
         "guestinfo.metadata.encoding" = "base64"
-        "guestinfo.userdata"          = base64encode(file("${path.module}/cloud-init/userdata.yaml"))
+        "guestinfo.userdata"          = base64encode(data.template_file.userdata.rendered)
         "guestinfo.userdata.encoding" = "base64"
     }
 }
 resource "vsphere_virtual_machine" "k8s-worker" {
-    count = 5
+    count = 6
     folder = vsphere_folder.k8s-dev.path
     name             = "dev-worker-${1+count.index}"
     num_cpus         = 4
-    memory           = 2048
+    memory           = 4096
     datastore_id     = data.vsphere_datastore.hdd-datastore.id
     resource_pool_id = data.vsphere_resource_pool.pool.id
     guest_id         = data.vsphere_virtual_machine.ubuntu-focal.guest_id
